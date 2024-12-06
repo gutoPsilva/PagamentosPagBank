@@ -213,6 +213,17 @@ export default class PagBankService {
         notification_urls: [
           "https://meu-site.com.br/notificacao"
         ],
+        charges: {
+          payment_method: {
+            type: "PIX",
+            pix: {
+              holder: {
+                name: "Nome do pagador",
+                tax_id: "***534218**"
+              }
+            }
+          }
+        }
       }
 
       // console.log(JSON.stringify(body));
