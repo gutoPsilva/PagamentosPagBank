@@ -1,25 +1,33 @@
 import dotenv from 'dotenv';
 import PagBankService from './services/pagbank.service.js';
 
+
 dotenv.config();
 
 const main = async () => {
   const pagBankService = new PagBankService();
 
-  // await pagBankService.CriarPedidoPix();
+  // const id = await pagBankService.CriarPedidoPix();
 
-  // await pagBankService.CriarPedidoDebito();
+  await pagBankService.ConsultarPagamento("CHAR_13CEF69E-ED53-4E0E-80FB-715CAAA77C90");
 
-  // await pagBankService.ConsultarPedido("CHAR_BC9F17EE-DC0A-459D-8396-063D73C454D0");
+  // const id = await pagBankService.CriarPedidoDebito();
 
-  const chavePublica = await pagBankService.ConsultarChavePublica();
+  // console.log("\n\n ID DO PEDIDO: ", id);
 
-  console.log(chavePublica);
+  // if(id) {
+  //   await pagBankService.ConsultarPedido(id);
+  // }
 
-  if(!chavePublica) {
-    await pagBankService.CriarChavePublica();
-  }
+  // const chavePublica = await pagBankService.ConsultarChavePublica();
 
+  // console.log(chavePublica);
+
+  // if(!chavePublica) {
+  //   await pagBankService.CriarChavePublica();
+  // }
+
+  
 }
 
 main();

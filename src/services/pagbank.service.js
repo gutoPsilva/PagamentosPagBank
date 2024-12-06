@@ -1,7 +1,9 @@
 import AxiosService from './axios.service.js';
+import { readFileSync } from 'fs';
+import vm from 'vm';
 
 export default class PagBankService {
-  axios; 
+  axios = null; 
 
   constructor() {
     const axiosService = new AxiosService();
@@ -37,7 +39,44 @@ export default class PagBankService {
     }
   }
 
+  async EncriptarCartao() {
+    const sdkScript = readFileSync('./libs/sdk.min.js', 'utf-8');
+
+    const context = {
+      navigator: {
+        userAgent: 'node.js'
+      },
+      window: {}
+    };
+
+    vm.createContext(context);
+    const script = new vm.Script(sdkScript);
+    script.runInContext(context);
+
+    const pagSeguro = context.PagSeguro;
+
+    const card = pagSeguro.encryptCard({
+      publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr+ZqgD892U9/HXsa7XqBZUayPquAfh9xx4iwUbTSUAvTlmiXFQNTp0Bvt/5vK2FhMj39qSv1zi2OuBjvW38q1E374nzx6NNBL5JosV0+SDINTlCG0cmigHuBOyWzYmjgca+mtQu4WczCaApNaSuVqgb8u7Bd9GCOL4YJotvV5+81frlSwQXralhwRzGhj/A57CGPgGKiuPT+AOGmykIGEZsSD9RKkyoKIoc0OS8CPIzdBOtTQCIwrLn2FxI83Clcg55W8gkFSOS6rWNbG5qFZWMll6yl02HtunalHmUlRUL66YeGXdMDC2PuRcmZbGO5a/2tbVppW6mfSWG3NPRpgwIDAQAB",
+      holder: "Gustavo Pereira da Silva",
+      number: "4539620659922097",
+      expMonth: "12",
+      expYear: "2030",
+      securityCode: "123"
+    });
+
+    if(card.errors) {
+      console.log(card.errors);
+      // throw new Error(card.errors[0]);
+    }
+
+    return card.encryptedCard;
+  }
+
   async CriarPedidoDebito() {
+    const encryptedCard = await this.EncriptarCartao();
+
+    console.log('CARD ENCRIPTADO: ' + encryptedCard);
+
     try {
       const body = {
         reference_id: "pedido1", // IDENTIFICAÇÃO DO PEDIDO
@@ -76,7 +115,7 @@ export default class PagBankService {
               type: "DEBIT_CARD", // CREDIT_CARD, DEBIT_CARD, BOLETO
               // installments: 1, // parcelas APENAS PARA O CREDITO
               card: {
-                encrypted: "CtlUuHwONtXvZnbg659aY5ooVzf/0YXD5QoG25GVYJvPi5pQhIpaE2AMN+HrmCrFib8Loc6Y5GFJ5F0XGBonFm1+GWy4efyyj3m3ERij4g3QIEppsEBVSvsNAumN5C6xAl1N4M/tui6R1ADccktCeEvQTh4KEA8FNhciriTzcKxHwbYQ+ZbZADS50I208b5CsnInqled2G9bXW2poDYBHB644GzvYV0KHNV0G0bcNziGRggAVj57LYXEejXNcM9lY6Rm1q1HyuGCJ/dmgrGF9Fs5tWbp0OPC0qgPBX/LbuqiB2JRZU1FEg2P6zl4QOegg4mdoRX9+9IRG1kD2oI7nA==",
+                encrypted: encryptedCard,
                 holder: {
                   name: "Gustavo Pereira da Silva",
                   tax_id: "24309587836"
@@ -97,6 +136,7 @@ export default class PagBankService {
 
       console.log(response.data);
 
+      return data.id;
     } catch(err) {
       console.error(err);
     }
@@ -104,21 +144,27 @@ export default class PagBankService {
 
   async ConsultarPedido(id) {
     try {
-      const response = await this.axios.get(`orders/${id}`);
+      const { data } = await this.axios.get(`orders/${id}`);
 
-      console.log(response.data);
+      console.log("PEDIDO: \n")
+
+      console.log(JSON.stringify(data));
     } catch(err) {
       console.error(err);
     }
   }
 
-  // async PagarPedido(id) {
-  //   try {
-  //     const response = 
-  //   } catch(err) {
+  async ConsultarPagamento(id) {
+    try {
+      const { data } = await this.axios.get(`charges/${id}`);
 
-  //   }
-  // }
+      console.log("PAGAMENTO: \n")
+
+      console.log(JSON.stringify(data));
+    } catch(err) {
+      console.error(err);
+    }
+  }
 
   async CriarPedidoPix() {
     try {
@@ -171,12 +217,11 @@ export default class PagBankService {
 
       // console.log(JSON.stringify(body));
 
-      const response = await this.axios.post("orders", body);
+      const { data } = await this.axios.post("orders", body);
 
-      console.log(response.data);
+      console.log(data);
 
-      // console.log(response.data);
-
+      return data.id;
     } catch(err) {
       // console.error(err);
     }
