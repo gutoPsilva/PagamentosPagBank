@@ -132,39 +132,39 @@ export default class PagBankService {
         ]
       }
 
-      const response = await this.axios.post("orders", body);
+      const { data } = await this.axios.post("orders", body);
 
-      console.log(response.data);
+      console.log(data);
 
-      return data.id;
+      return data;
     } catch(err) {
       console.error(err);
     }
   }
 
-  async ConsultarPedido(id) {
+  async ConsultarPagamentoPedido(id) {
     try {
       const { data } = await this.axios.get(`orders/${id}`);
 
-      console.log("PEDIDO: \n")
+      // console.log(JSON.stringify(data));
 
-      console.log(JSON.stringify(data));
+      return data.charges;
     } catch(err) {
       console.error(err);
     }
   }
 
-  async ConsultarPagamento(id) {
-    try {
-      const { data } = await this.axios.get(`charges/${id}`);
+  // async ConsultarPagamento(id) {
+  //   try {
+  //     const { data } = await this.axios.get(`charges/${id}`);
 
-      console.log("PAGAMENTO: \n")
+  //     console.log("PAGAMENTO: \n")
 
-      console.log(JSON.stringify(data));
-    } catch(err) {
-      console.error(err);
-    }
-  }
+  //     console.log(JSON.stringify(data));
+  //   } catch(err) {
+  //     console.error(err);
+  //   }
+  // }
 
   async CriarPedidoPix() {
     try {
@@ -213,26 +213,20 @@ export default class PagBankService {
         notification_urls: [
           "https://meu-site.com.br/notificacao"
         ],
-        charges: {
-          payment_method: {
-            type: "PIX",
-            pix: {
-              holder: {
-                name: "Nome do pagador",
-                tax_id: "***534218**"
-              }
-            }
-          }
-        }
+        // charges: {
+        //   payment_method: {
+        //     type: "PIX",
+        //   }
+        // }
       }
 
       // console.log(JSON.stringify(body));
 
       const { data } = await this.axios.post("orders", body);
 
-      console.log(data);
+      console.log(JSON.stringify(data));
 
-      return data.id;
+      return data;
     } catch(err) {
       // console.error(err);
     }
